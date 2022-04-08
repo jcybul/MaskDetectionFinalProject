@@ -20,7 +20,6 @@ def detect_and_predict_mask(frame, faceNet, maskNet):
     # pass the blob through the network and obtain the face detections
     faceNet.setInput(blob)
     detections = faceNet.forward()
-    print(detections.shape)
 
     # initialize our list of faces, their corresponding locations,
     # and the list of predictions from our face mask network
@@ -73,25 +72,25 @@ def detect_and_predict_mask(frame, faceNet, maskNet):
     return (locs, preds)
 
 # load our serialized face detector model from disk
+prototxtPath = "deploy.prototxt"
+weightsPath = "res10_300x300_ssd_iter_140000.caffemodel"
+faceNet = cv2.dnn.readNet(prototxtPath, weightsPath)
+
+# load the face mask detector model from disk
+maskNet = load_model("mask_detector2.model")
+
+# initialize the video stream
+
+vs = VideoStream(src=0).start()
+# grab the frame from the threaded video stream and resize it
+# to have a maximum width of 400 pixels
 
 
 # loop over the frames from the video stream
 print("[INFO] starting video stream...")
 while True:
-    prototxtPath = "deploy.prototxt"
-    weightsPath = "res10_300x300_ssd_iter_140000.caffemodel"
-    faceNet = cv2.dnn.readNet(prototxtPath, weightsPath)
-
-    # load the face mask detector model from disk
-    maskNet = load_model("mask_detector.model")
-
-    # initialize the video stream
-
-    vs = VideoStream(src=0).start()
-    # grab the frame from the threaded video stream and resize it
-    # to have a maximum width of 400 pixels
     frame = vs.read()
-    frame = imutils.resize(frame, width=200)
+    frame = imutils.resize(frame, width=1000)
 
     # detect faces in the frame and determine if they are wearing a
     # face mask or not
@@ -102,15 +101,18 @@ while True:
     for (box, pred) in zip(locs, preds):
         # unpack the bounding box and predictions
         (startX, startY, endX, endY) = box
-        (mask, withoutMask) = pred
+        (mask, withoutMask,wrong) = pred
 
         # determine the class label and color we'll use to draw
         # the bounding box and text
-        label = "Mask" if mask > withoutMask else "No Mask"
-        color = (0, 255, 0) if label == "Mask" else (0, 0, 255)
+        a = [mask,withoutMask,wrong]
+        l_arr = ["Mask","No Mask","Wrong"]
+        c_arr = [(0, 255, 0),(0, 0, 255),(255, 0, 0)]
+        label = l_arr[a.index(max(a))]
+        color = c_arr[a.index(max(a))]
 
         # include the probability in the label
-        label = "{}: {:.2f}%".format(label, max(mask, withoutMask) * 100)
+        label = "{}: {:.2f}%".format(label, max(mask, withoutMask,wrong) * 100)
 
         # display the label and bounding box rectangle on the output
         # frame
@@ -119,9 +121,8 @@ while True:
         cv2.rectangle(frame, (startX, startY), (endX, endY), color, 2)
 
     # show the output frame
-    cv2.imwrite("pred.jpg", frame)
+    cv2.imshow("pred", frame)
     key = cv2.waitKey(5) & 0xFF
-    time.sleep(8)
 
     # if the `q` key was pressed, break from the loop
     if key == ord("q"):
