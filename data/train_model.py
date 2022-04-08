@@ -21,7 +21,7 @@ import numpy as np
 import os
 
 INIT_LR = 1e-4
-EPOCHS = 5
+EPOCHS = 20
 BS = 32
 
 
@@ -32,7 +32,7 @@ def add_labels(inp):
     for l in inp:
         print(l)
         # CHANGE here to add local path to data folder in your machine
-        p = os.path.join("/Users/jcybul/Documents/GitHub/MaskDetectionFinalProject/data", l)
+        p = os.path.join("C:\\Users\\19292\\Documents\\GitHub\\MaskDetectionFinalProject\\data", l)
         print(p)
         for img in os.listdir(p):
             img_path = os.path.join(p, img)
@@ -120,7 +120,7 @@ def runModel(data, labels):
 
     # serialize the model to disk
     print("[INFO] saving mask detector model...")
-    model.save("mask_detector.model", save_format="h5")
+    model.save("mask_detector2.model", save_format="h5")
 
     # plot the training loss and accuracy
     N = EPOCHS
